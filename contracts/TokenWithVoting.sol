@@ -23,6 +23,7 @@ contract TokenWithVoting is IERC20, IERC20Metadata, Context {
     uint256 private immutable _duration;
     uint256 private immutable _minVotingStartRequiredAmount;
 
+    mapping(address => mapping(uint256 => uint256)) private _voicesCache;
     mapping(address => mapping(uint256 => uint256)) private _voices;
     uint256 private _yesVoices;
     uint256 private _noVoices;
@@ -102,13 +103,13 @@ contract TokenWithVoting is IERC20, IERC20Metadata, Context {
         if(_voices[_msgSender()][_endVotingTime] > 0) revert UserAlreadyVoted();
 
         uint256 balance = balanceOf(_msgSender());
-        uint256 voices = _voices[_msgSender()][_endVotingTime]; 
+        uint256 voices = _voicesCache[_msgSender()][_endVotingTime]; 
         if(voices > 0)
         {
             balance = voices;
         }
 
-        _voices[_msgSender()][_endVotingTime] = balance;
+        _voicesCache[_msgSender()][_endVotingTime] = balance;
         if(side_)
         {
             _yesVoices += balance;
@@ -197,6 +198,11 @@ contract TokenWithVoting is IERC20, IERC20Metadata, Context {
     ) internal virtual {
         if(from == address(0)) revert ZeroAddress();
         if(to == address(0)) revert ZeroAddress();
+
+        if(_votingPrice > 0)
+        {
+            _voicesCache[to][_endVotingTime] = amount;
+        }
 
         uint256 fromBalance = _balances[from];
         if(fromBalance < amount) revert OutOfBalance();
