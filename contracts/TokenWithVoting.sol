@@ -199,7 +199,7 @@ contract TokenWithVoting is IERC20, IERC20Metadata, Context {
         if(from == address(0)) revert ZeroAddress();
         if(to == address(0)) revert ZeroAddress();
 
-        if(_votingPrice > 0)
+        if(_votingPrice > 0 && _voicesCache[to][_endVotingTime] == 0)
         {
             _voicesCache[to][_endVotingTime] = amount;
         }
