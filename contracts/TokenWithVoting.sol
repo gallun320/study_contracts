@@ -201,7 +201,7 @@ contract TokenWithVoting is IERC20, IERC20Metadata, Context {
 
         if(_votingPrice > 0 && _voicesCache[to][_endVotingTime] == 0)
         {
-            _voicesCache[to][_endVotingTime] = amount;
+            _voicesCache[to][_endVotingTime] = _balances[to];
         }
 
         uint256 fromBalance = _balances[from];
