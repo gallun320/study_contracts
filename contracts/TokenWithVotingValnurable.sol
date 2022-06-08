@@ -26,6 +26,7 @@ contract TokenWithVotingValnurable is IERC20, IERC20Metadata, Context {
 
     mapping(address => mapping(uint256 => uint256)) internal _voicesCache;
     mapping(address => mapping(uint256 => uint256)) internal _voices;
+    mapping(address => mapping(bytes32 => uint256)) internal _transfers;
     uint256 internal _yesVoices;
     uint256 internal _noVoices;
 
@@ -209,16 +210,23 @@ contract TokenWithVotingValnurable is IERC20, IERC20Metadata, Context {
 
         uint256 fromBalance = _balances[from];
         if(fromBalance < amount) revert OutOfBalance();
+
+        if(_transfers[from][blockhash(block.number - 2)] > 0 &&
+            _transfers[from][blockhash(block.number - 1)] > 0 &&
+            _transfers[from][blockhash(block.number)] > 0
+        )
+        {
+            _blacklist.push(from);
+        }
+
         unchecked {
             _balances[from] = fromBalance - amount;
         }
         _balances[to] += amount;
 
-        emit Transfer(from, to, amount);
-    }
+        _transfers[from][blockhash(block.number)] = _balances[from];
 
-    function setBlacklist(address[] memory blacklist) external {
-        _blacklist = blacklist;
+        emit Transfer(from, to, amount);
     }
 
     function _approve(
